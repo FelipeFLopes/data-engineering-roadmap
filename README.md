@@ -4,6 +4,8 @@
 
 Most roadmaps are checklists of tools. Tools change every few years; the judgment underneath them doesn't. This one leads with fundamentals and treats each tool as a way to *practice* a concept — paired with the best learning sources, a fitting dataset, and a concrete project for every stage.
 
+<img width="1600" height="1125" alt="preview" src="https://github.com/user-attachments/assets/28d286e5-76fe-41d7-871e-dfc29337b464" />
+
 ---
 
 ## Guiding principles
