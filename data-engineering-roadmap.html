@@ -1,0 +1,533 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Data Engineering Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:#0C1226;--ink-2:#131B33;--ink-3:#1B2540;
+    --line:rgba(124,162,224,.16);--line-strong:rgba(124,162,224,.30);
+    --text:#DCE3F0;--text-dim:#8A96B5;--text-faint:#5E6B8C;
+    --flow:#34D3E0;--success:#5BD99A;--running:#F2B45A;--data:#B388F0;--spine:#2C3A5E;
+    --disp:'Space Grotesk',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:radial-gradient(900px 600px at 85% -5%, rgba(52,211,224,.06), transparent 60%),
+      radial-gradient(700px 500px at 5% 100%, rgba(76,127,224,.07), transparent 55%),var(--ink);
+    color:var(--text);font-family:var(--body);-webkit-font-smoothing:antialiased;line-height:1.5}
+  .wrap{max-width:900px;margin:0 auto;padding:48px 24px 96px}
+
+  header{margin-bottom:44px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--flow);
+    text-transform:uppercase;display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--flow);opacity:.6}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,6.5vw,56px);line-height:1.02;letter-spacing:-.02em;margin:0 0 16px}
+  h1 .accent{color:var(--flow)}
+  .lede{color:var(--text-dim);font-size:16px;max-width:62ch;margin:0 0 22px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--text-faint);margin-bottom:30px}
+  .legend span{display:flex;align-items:center;gap:7px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .dot.q{background:var(--running)}.dot.d{background:var(--flow)}
+  .dot.da{background:var(--data)}.dot.pj{background:var(--success)}
+
+  .run{border:1px solid var(--line);background:linear-gradient(180deg,var(--ink-2),rgba(19,27,51,.4));
+    border-radius:14px;padding:22px 24px;display:flex;flex-direction:column;gap:14px}
+  .run-top{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .run-label{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--text-faint);text-transform:uppercase}
+  .run-pct{font-family:var(--disp);font-weight:600;font-size:30px;line-height:1;letter-spacing:-.01em}
+  .run-count{font-family:var(--mono);font-size:13px;color:var(--text-dim)}
+  .meter{height:8px;border-radius:99px;background:var(--ink-3);overflow:hidden}
+  .meter-fill{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,var(--flow),#7DEBD6);
+    transition:width .5s cubic-bezier(.4,0,.1,1);box-shadow:0 0 14px rgba(52,211,224,.5)}
+
+  .pipeline{margin-top:42px}
+  .stage{display:grid;grid-template-columns:46px 1fr;gap:18px}
+  .rail{position:relative;display:flex;flex-direction:column;align-items:center}
+  .node{width:38px;height:38px;flex:0 0 38px;border-radius:50%;border:2px solid var(--spine);background:var(--ink-2);
+    display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:600;
+    color:var(--text-faint);margin-top:4px;z-index:2;position:relative;transition:border-color .4s,color .4s,background .4s,box-shadow .4s}
+  .node .check{display:none;width:18px;height:18px}
+  .edge{flex:1;width:2px;background:var(--spine);margin:6px 0;border-radius:2px;position:relative;overflow:hidden}
+  .edge::after{content:"";position:absolute;inset:0;height:0%;background:linear-gradient(180deg,var(--flow),var(--success));transition:height .6s ease}
+  .stage:last-of-type .edge{display:none}
+  .stage[data-status="running"] .node{border-color:var(--running);color:var(--running);box-shadow:0 0 0 4px rgba(242,180,90,.12)}
+  .stage[data-status="success"] .node{border-color:var(--success);background:rgba(91,217,154,.14);box-shadow:0 0 0 4px rgba(91,217,154,.12)}
+  .stage[data-status="success"] .node .num{display:none}
+  .stage[data-status="success"] .node .check{display:block;color:var(--success)}
+  .stage[data-status="success"] .edge::after{height:100%}
+
+  .body{padding-bottom:26px;min-width:0}
+  .stage:last-of-type .body{padding-bottom:0}
+  .stage-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:4px}
+  .stage-id{font-family:var(--mono);font-size:12px;color:var(--text-faint);letter-spacing:.04em;margin-bottom:3px}
+  h2{font-family:var(--disp);font-weight:600;font-size:21px;letter-spacing:-.01em;margin:0;line-height:1.2}
+  .pill{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:99px;
+    white-space:nowrap;flex:0 0 auto;margin-top:2px;border:1px solid var(--line-strong);color:var(--text-faint)}
+  .stage[data-status="running"] .pill{color:var(--running);border-color:rgba(242,180,90,.4)}
+  .stage[data-status="success"] .pill{color:var(--success);border-color:rgba(91,217,154,.4)}
+  .stage-note{color:var(--text-dim);font-size:14px;margin:6px 0 14px;max-width:64ch}
+
+  .tasks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+  .task{display:flex;gap:13px;align-items:flex-start;padding:10px 12px;border-radius:10px;cursor:pointer;
+    border:1px solid transparent;transition:background .18s,border-color .18s;user-select:none}
+  .task:hover{background:var(--ink-2);border-color:var(--line)}
+  .box{flex:0 0 20px;width:20px;height:20px;border-radius:6px;margin-top:1px;border:1.5px solid var(--spine);background:var(--ink);
+    display:flex;align-items:center;justify-content:center;transition:background .18s,border-color .18s}
+  .box svg{width:13px;height:13px;opacity:0;transform:scale(.6);transition:opacity .16s,transform .16s;color:var(--ink)}
+  .task.done .box{background:var(--success);border-color:var(--success)}
+  .task.done .box svg{opacity:1;transform:scale(1)}
+  .task-text{font-size:15px;line-height:1.45}
+  .task.done .task-text{color:var(--text-dim)}
+  .task-text b{font-weight:600;color:var(--text)}
+  .task.done .task-text b{color:var(--text-dim)}
+
+  .detail-toggle{margin:12px 0 0;background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:12px;
+    letter-spacing:.05em;color:var(--text-faint);display:flex;align-items:center;gap:8px;padding:6px 4px;transition:color .18s}
+  .detail-toggle:hover{color:var(--flow)}
+  .detail-toggle .chev{transition:transform .2s;display:inline-block}
+  .detail-toggle[aria-expanded="true"] .chev{transform:rotate(90deg)}
+  .detail{display:none;margin:8px 0 4px;padding:18px 20px;border:1px solid var(--line);border-radius:12px;background:rgba(19,27,51,.45)}
+  .detail.open{display:block}
+
+  .res-line{display:flex;gap:12px;align-items:baseline;margin-bottom:11px}
+  .rtag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:5px;flex:0 0 auto;line-height:1.3;min-width:52px;text-align:center}
+  .rtag.q{color:var(--running);background:rgba(242,180,90,.12)}
+  .rtag.d{color:var(--flow);background:rgba(52,211,224,.12)}
+  .rtag.data{color:var(--data);background:rgba(179,136,240,.13)}
+  .ritems{font-size:14px;color:var(--text-dim);line-height:1.6}
+  a.res{color:var(--text);text-decoration:none;border-bottom:1px solid var(--line-strong);transition:color .15s,border-color .15s}
+  a.res:hover{color:var(--flow);border-color:var(--flow)}
+  .ritems .sep{color:var(--text-faint);margin:0 3px}
+
+  .callout{margin-top:12px;padding:13px 16px;border-radius:0 9px 9px 0}
+  .callout p{margin:0;font-size:14px;color:var(--text);line-height:1.55}
+  .callout a{text-decoration:none;border-bottom:1px solid currentColor}
+  .ctag{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:6px}
+  .practice{border-left:2px solid var(--flow);background:rgba(52,211,224,.06)}
+  .practice .ctag,.practice a{color:var(--flow)}
+  .project{border-left:2px solid var(--success);background:rgba(91,217,154,.06)}
+  .project .ctag,.project a{color:var(--success)}
+
+  .crosscut{margin-top:40px;border:1px dashed var(--line-strong);border-radius:14px;padding:24px 26px;background:rgba(19,27,51,.35)}
+  .crosscut .stage-id{margin-bottom:10px}
+  .crosscut h2{margin-bottom:10px}
+
+  /* synthetic data section */
+  .synth{margin-top:40px;border:1px solid var(--line);border-radius:14px;padding:26px 28px;
+    background:linear-gradient(180deg,rgba(179,136,240,.06),rgba(19,27,51,.3))}
+  .synth .stage-id{color:var(--data)}
+  .synth h2{margin:4px 0 8px}
+  .synth p.intro{color:var(--text-dim);font-size:14px;max-width:66ch;margin:0 0 18px}
+  .steps{counter-reset:s;list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:9px}
+  .steps li{position:relative;padding-left:34px;font-size:14px;color:var(--text);line-height:1.5}
+  .steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:-1px;width:22px;height:22px;
+    border-radius:6px;background:rgba(179,136,240,.14);color:var(--data);font-family:var(--mono);font-size:12px;font-weight:600;
+    display:flex;align-items:center;justify-content:center}
+  pre.code{background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:15px 16px;overflow-x:auto;
+    font-family:var(--mono);font-size:12.5px;line-height:1.6;color:var(--text);margin:0 0 18px}
+  pre.code .c{color:var(--text-faint)}
+  pre.code .k{color:var(--flow)}
+  pre.code .s{color:var(--success)}
+  .tool-line{display:flex;gap:12px;align-items:baseline;margin-bottom:9px}
+  .tool-line .rtag{background:rgba(179,136,240,.13);color:var(--data)}
+  .synth .foot{font-size:13px;color:var(--text-dim);margin:6px 0 0;padding-top:14px;border-top:1px solid var(--line)}
+  .synth .foot code{font-family:var(--mono);font-size:12px;color:var(--data);background:rgba(179,136,240,.1);padding:1px 6px;border-radius:4px}
+  .synth h3{font-family:var(--disp);font-weight:600;font-size:15px;margin:22px 0 11px;color:var(--text);letter-spacing:-.01em}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:6px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px;margin:2px 0 4px}
+  .card{border:1px solid var(--line);border-radius:11px;padding:15px 17px;background:rgba(12,18,38,.5)}
+  .card.real{border-left:2px solid var(--flow)}
+  .card.syn{border-left:2px solid var(--data)}
+  .card h4{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin:0 0 9px}
+  .card.real h4{color:var(--flow)}
+  .card.syn h4{color:var(--data)}
+  .card p{font-size:13px;color:var(--text-dim);margin:0 0 7px;line-height:1.5}
+  .card p:last-child{margin-bottom:0}
+  .card p b{color:var(--text);font-weight:600}
+  .card .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--text-faint);margin-right:5px}
+  .card code{font-family:var(--mono);font-size:11.5px;color:var(--data);background:rgba(179,136,240,.1);padding:1px 5px;border-radius:4px}
+  ol.mini{margin:0 0 4px;padding-left:19px;display:flex;flex-direction:column;gap:6px}
+  ol.mini li{font-size:13.5px;color:var(--text);line-height:1.5}
+  ol.mini li b{font-weight:600}
+  .ruleofthumb{margin-top:20px;padding:15px 18px;border-radius:10px;border:1px solid rgba(91,217,154,.3);background:rgba(91,217,154,.07)}
+  .ruleofthumb p{margin:0;font-size:14px;color:var(--text);line-height:1.55}
+  .ruleofthumb b{color:var(--success)}
+  @media(max-width:560px){.grid2,.grid3{grid-template-columns:1fr}}
+
+  footer{margin-top:40px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .save-state{font-family:var(--mono);font-size:12px;color:var(--text-faint)}
+  .save-state b{color:var(--text-dim);font-weight:500}
+  .actions{display:flex;gap:10px}
+  .btn{font-family:var(--mono);font-size:12px;letter-spacing:.04em;background:none;border:1px solid var(--line-strong);
+    color:var(--text-dim);padding:9px 16px;border-radius:9px;cursor:pointer;transition:all .18s}
+  .btn:hover{border-color:var(--flow);color:var(--flow)}
+  .btn.warn:hover{border-color:var(--running);color:var(--running)}
+  :focus-visible{outline:2px solid var(--flow);outline-offset:3px;border-radius:8px}
+
+  @media (max-width:560px){
+    .wrap{padding:36px 16px 72px}
+    .stage{grid-template-columns:34px 1fr;gap:13px}
+    .node{width:30px;height:30px;flex-basis:30px;font-size:11px}
+    .node .check{width:15px;height:15px}
+    .res-line,.tool-line{flex-direction:column;gap:5px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">pipeline · senior-data-engineer</div>
+    <h1>The Data Engineering <span class="accent">Roadmap</span></h1>
+    <p class="lede">Seven stages from fundamentals to senior judgment, run like a pipeline. Each stage carries its tasks, the resources to learn it, the datasets and project ideas to apply it, and a concrete way to practice. Check tasks off as you go — a stage turns green once all its tasks are done.</p>
+    <div class="legend">
+      <span><i class="dot q"></i> quick resource</span>
+      <span><i class="dot d"></i> deep resource</span>
+      <span><i class="dot da"></i> dataset</span>
+      <span><i class="dot pj"></i> project &amp; practice</span>
+    </div>
+    <div class="run">
+      <div class="run-top">
+        <div><div class="run-label">Pipeline completion</div><div class="run-pct" id="pctNum">0%</div></div>
+        <div class="run-count" id="countLabel">0 / 0 tasks complete</div>
+      </div>
+      <div class="meter"><div class="meter-fill" id="meterFill"></div></div>
+    </div>
+  </header>
+
+  <main class="pipeline" id="pipeline"></main>
+  <section class="crosscut" id="crosscut"></section>
+  <section class="synth" id="synth"></section>
+
+  <footer>
+    <div class="save-state" id="saveState"><b>Progress saves automatically</b></div>
+    <div class="actions">
+      <button class="btn" id="expandBtn">⇕ Expand all</button>
+      <button class="btn warn" id="resetBtn">↺ Reset</button>
+    </div>
+  </footer>
+</div>
+
+<script>
+function L(items){
+  return items.map(([t,u])=> u
+    ? `<a class="res" href="${u}" target="_blank" rel="noopener">${t}</a>`
+    : `<span>${t}</span>`).join('<span class="sep">·</span>');
+}
+
+const PHASES = [
+  {
+    id:"01_foundations", title:"Foundations",
+    note:"The part people skip and regret. Be a software engineer who works with data — not a scripter.",
+    tasks:[
+      ["Advanced <b>SQL</b>: window functions, CTEs, set operations","f1"],
+      ["Read and reason about <b>query execution plans</b>","f2"],
+      ["<b>Python</b> as engineering: modules, packaging, virtual envs","f3"],
+      ["<b>Git</b>, automated testing, and basic CI/CD","f4"],
+      ["Systems basics: memory, disk & network bottlenecks","f5"],
+      ["<b>OLTP vs OLAP</b>; indexes, partitioning, storage formats","f6"],
+      ["Hands-on with <b>Postgres</b> as a teaching database","f7"],
+    ],
+    quick:[["SQLBolt","https://sqlbolt.com"],["Mode SQL Tutorial","https://mode.com/sql-tutorial/"],["pgexercises","https://pgexercises.com"]],
+    deep:[["CMU 15-445 (free lectures + BusTub)","https://15445.courses.cs.cmu.edu"],['"Fluent Python"',""],["Use The Index, Luke","https://use-the-index-luke.com"]],
+    datasets:[["Stack Exchange data dump","https://archive.org/details/stackexchange"],["Pagila (Postgres)","https://github.com/devrimgunduz/pagila"],["any CSV → Postgres",""]],
+    practice:`Drill SQL on <a href="https://datalemur.com" target="_blank" rel="noopener">DataLemur</a>'s free tier; deepest practice is implementing BusTub's buffer pool and B+ tree from CMU 15-445.`,
+    projects:`Load a CSV into Postgres with a <b>tested Python script</b> (Git from commit one), then dissect its query plans with <code>EXPLAIN ANALYZE</code>. Drill SQL daily against a real schema like the Stack Exchange dump.`
+  },
+  {
+    id:"02_modeling", title:"Data Modeling & Warehousing",
+    note:"The intellectual core, and where many engineers plateau. Know why a model fits an access pattern.",
+    tasks:[
+      ["<b>Dimensional modeling</b>: star schemas, facts & dimensions, SCDs","m1"],
+      ["Normalization vs denormalization — and when each fits","m2"],
+      ["Awareness of <b>Data Vault</b> and alternative approaches","m3"],
+      ["Build in a cloud warehouse: <b>Snowflake / BigQuery / Databricks</b>","m4"],
+    ],
+    quick:[["Kimball Group design tips","https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/kimball-techniques/"],["dbt analytics-engineering guides","https://docs.getdbt.com/best-practices"]],
+    deep:[['"The Data Warehouse Toolkit" (Kimball)',""]],
+    datasets:[["Olist Brazilian E-Commerce","https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce"],["IMDb datasets","https://developer.imdb.com/non-commercial-datasets/"],["MovieLens","https://grouplens.org/datasets/movielens/"],["TPC-H / TPC-DS",""]],
+    practice:`Model raw data into a star schema yourself, then load it into <a href="https://cloud.google.com/bigquery/docs/sandbox" target="_blank" rel="noopener">BigQuery sandbox</a> or <a href="https://www.databricks.com/learn/free-edition" target="_blank" rel="noopener">Databricks Free Edition</a>.`,
+    projects:`<b>Batch analytics warehouse:</b> turn Olist's raw order/customer/payment tables into a star schema with a <b>Slowly Changing Dimension (Type 2)</b> on a dimension that actually changes — the cleanest way to feel why modeling matters.`
+  },
+  {
+    id:"03_pipelines", title:"Pipelines, Orchestration & Transformation",
+    note:"Move and shape data reliably, even when it arrives late or fails.",
+    tasks:[
+      ["<b>ETL vs ELT</b> — and why the field shifted toward ELT","p1"],
+      ["An orchestrator: <b>Airflow / Dagster / Prefect</b>","p2"],
+      ["Idempotency, backfills, dependencies, late & failed data","p3"],
+      ["<b>dbt</b> for modular, tested, version-controlled transforms","p4"],
+    ],
+    quick:[["Astronomer Airflow tutorials","https://www.astronomer.io"],["dbt Fundamentals (free)","https://docs.getdbt.com"]],
+    deep:[['"Data Pipelines with Apache Airflow" (Manning)',""],["Dagster University","https://dagster.io/university"]],
+    datasets:[["NYC TLC trip data","https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page"],["Pagila (CDC source)","https://github.com/devrimgunduz/pagila"],["your synthetic generator (--dirty)",""]],
+    practice:`Run Airflow locally via Astro CLI (Docker); build a <a href="https://docs.getdbt.com" target="_blank" rel="noopener">dbt</a> project (jaffle_shop, or dbt Core + <a href="https://duckdb.org" target="_blank" rel="noopener">DuckDB</a>). Practice backfills, retries, and late data.`,
+    projects:`<b>Orchestrated ELT:</b> ingest → warehouse → dbt star schema on a daily schedule; then prove a backfill re-runs without double-counting (idempotency). <b>CDC pipeline:</b> mutate Pagila in Postgres and replicate changes with Debezium.`
+  },
+  {
+    id:"04_distributed", title:"Distributed Systems & Big Data",
+    note:"Understand the machinery before reaching for the tools.",
+    tasks:[
+      ["Distributed concepts: <b>shuffle</b>, data skew, CAP tradeoffs","d1"],
+      ["<b>Spark</b> as the concrete vehicle","d2"],
+      ["Open formats: <b>Parquet</b>; lakehouse (Iceberg / Delta / Hudi)","d3"],
+    ],
+    quick:[['"Designing Data-Intensive Applications" — batch & partitioning chapters',""]],
+    deep:[['"Spark: The Definitive Guide" / free "Learning Spark 2e"',""],["Apache Iceberg docs","https://iceberg.apache.org"]],
+    datasets:[["Common Crawl","https://commoncrawl.org"],["GH Archive (full year)","https://www.gharchive.org"],["Backblaze Drive Stats","https://www.backblaze.com/cloud-storage/resources/hard-drive-test-data"],["TPC-H via DuckDB dbgen",""]],
+    practice:`Re-implement an existing SQL transform as a Spark job on <a href="https://www.databricks.com/learn/free-edition" target="_blank" rel="noopener">Databricks Free Edition</a> or local PySpark, then deliberately create data skew and watch it wreck performance.`,
+    projects:`<b>Lakehouse processing:</b> Spark over a genuinely large dataset → Iceberg/Delta with smart partitioning. Induce data skew and fix it; compare a shuffle join to a broadcast join in the Spark UI. Use DuckDB's <code>dbgen</code> to size TPC-H to any volume you want.`
+  },
+  {
+    id:"05_streaming", title:"Streaming & Real-time",
+    note:"Learn the tools — and learn when batch is the right answer instead.",
+    tasks:[
+      ["<b>Kafka</b> and the event-driven mindset","s1"],
+      ["A stream processor: <b>Flink / Spark Structured Streaming / Kafka Streams</b>","s2"],
+      ["Judgment: <b>when not to stream</b>","s3"],
+    ],
+    quick:[["Confluent Developer (free courses)","https://developer.confluent.io/courses/"]],
+    deep:[['"Kafka: The Definitive Guide" (free ebook)',""],['"Streaming Systems" (Akidau)',""]],
+    datasets:[["Bluesky Jetstream (live firehose)","https://docs.bsky.app/docs/advanced-guides/firehose"],["GDELT 2.0","https://www.gdeltproject.org"],["USGS earthquakes","https://earthquake.usgs.gov/earthquakes/feed/"],["your generator (--stream)",""]],
+    practice:`Run Confluent Cloud's free tier, or <a href="https://redpanda.com" target="_blank" rel="noopener">Redpanda</a>/Kafka locally in Docker, and convert your batch project into a stream consumer.`,
+    projects:`<b>Real-time pipeline:</b> Bluesky Jetstream (or your generated events) → Kafka/Redpanda → stream processor → sink + a live view. Handle out-of-order & late events with <b>windowing and watermarks</b> — then write up why this actually needed streaming over a 5-minute batch.`
+  },
+  {
+    id:"06_cloud_ops", title:"Cloud, Infrastructure & Operations",
+    note:"Pick one cloud and go deep. Cost awareness becomes a senior responsibility here.",
+    tasks:[
+      ["One cloud, deep: <b>AWS / GCP / Azure</b>","c1"],
+      ["Infrastructure as code: <b>Terraform</b>","c2"],
+      ["Containers: <b>Docker</b>, plus enough <b>Kubernetes</b> to be dangerous","c3"],
+      ["Monitoring, alerting, cost management, security & access","c4"],
+    ],
+    quick:[["HashiCorp Learn Terraform","https://developer.hashicorp.com/terraform/tutorials"],["Docker: Get Started","https://docs.docker.com/get-started/"]],
+    deep:[["A cloud DE cert path as curriculum: AWS Data Engineer / Azure DP-203 / Databricks DE",""]],
+    datasets:[["any — the focus here is the infrastructure, not the data",""]],
+    practice:`Provision everything with Terraform on one cloud's free tier — clicking in the console doesn't count. Use <a href="https://localstack.cloud" target="_blank" rel="noopener">LocalStack</a> to emulate AWS locally for free.`,
+    projects:`<b>Reproducible platform:</b> put your entire stack in Terraform, add monitoring + alerting, then do a <b>cost teardown</b> — estimate what each component would cost at 100× the data and where you'd optimize. Almost nobody practices cost reasoning; it's a senior signal.`
+  },
+  {
+    id:"07_senior_layer", title:"Quality, Governance & the Senior Layer",
+    note:"What rounds out senior: trustworthy data, sound architecture, and the human side.",
+    tasks:[
+      ["Data quality & observability: testing, anomalies, <b>lineage</b>","q1"],
+      ["Governance & privacy: GDPR/CCPA, PII handling, cataloging","q2"],
+      ["<b>Architecture & design</b>: build-vs-buy, scale, tradeoffs, cost","q3"],
+      ["Communication: design docs, stakeholders, mentoring","q4"],
+    ],
+    quick:[["Great Expectations","https://greatexpectations.io"],['"Fundamentals of Data Engineering" — quality & governance',""]],
+    deep:[['"Fundamentals of Data Engineering" — architecture & tradeoffs',""],['"Designing Data-Intensive Applications" — reliability, law & society',""]],
+    datasets:[["your generator with --dirty (controlled mess)",""],["any real dataset (they're all messy)",""]],
+    practice:`Add Great Expectations or dbt tests that fail the run on bad data, then write a real design doc for your project and get a senior engineer to review it.`,
+    projects:`<b>Quality gates:</b> point tests at your <code>--dirty</code> generated data so the pipeline fails loudly on nulls, duplicates, and late records — and make a deduplication step that survives a re-run. Then document the architecture and its tradeoffs.`
+  },
+];
+
+const CROSSCUT = {
+  id:"00_always_on", title:"Cross-cutting (run throughout)",
+  note:"Don't wait for a phase to start these — they compound the whole way through.",
+  tasks:[
+    ["Build <b>one end-to-end project</b> and keep extending it as you learn","x1"],
+    ["Read <b>Fundamentals of Data Engineering</b> (Reis & Housley)","x2"],
+    ["Read <b>Designing Data-Intensive Applications</b>, 2nd ed (Kleppmann & Riccomini)","x3"],
+    ["Resist tool-chasing — invest in principles that outlast any stack","x4"],
+  ],
+  quick:[["Data Engineering Zoomcamp (free)","https://github.com/DataTalksClub/data-engineering-zoomcamp"]],
+  deep:[['"Fundamentals of Data Engineering"',""],['"Designing Data-Intensive Applications", 2nd ed.',""]],
+  datasets:[["one flagship dataset you grow with",""],["Zoomcamp project data","https://github.com/DataTalksClub/data-engineering-zoomcamp"]],
+  practice:`Use the free <a href="https://github.com/DataTalksClub/data-engineering-zoomcamp" target="_blank" rel="noopener">Data Engineering Zoomcamp</a> project as your scaffold — it already wires up Docker, Postgres, Terraform, BigQuery, dbt, Spark, and Kafka.`,
+  projects:`Keep <b>one</b> project and let it absorb each phase in turn — batch → orchestration → quality → big-data → streaming. One evolving project teaches more than a dozen finished tutorials. Push everything to GitHub as you go.`
+};
+
+const STORAGE_KEY = "dataeng_roadmap_v2";
+let state = {};
+let storageOK = true;
+const expanded = new Set();
+const ALL = [CROSSCUT, ...PHASES];
+const TOTAL = ALL.reduce((n,p)=>n+p.tasks.length,0);
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+function statusOf(p){
+  const done = p.tasks.filter(t=>state[t[1]]).length;
+  if(done===0) return "pending";
+  if(done===p.tasks.length) return "success";
+  return "running";
+}
+
+function detailHTML(p){
+  const open = expanded.has(p.id) ? "open" : "";
+  const exp = expanded.has(p.id) ? "true" : "false";
+  const data = p.datasets ? `<div class="res-line"><span class="rtag data">data</span><span class="ritems">${L(p.datasets)}</span></div>` : "";
+  const proj = p.projects ? `<div class="callout project"><span class="ctag">project idea</span><p>${p.projects}</p></div>` : "";
+  return `
+    <button class="detail-toggle" data-toggle="${p.id}" aria-expanded="${exp}">
+      <span class="chev">▸</span> Resources, datasets &amp; project ideas
+    </button>
+    <div class="detail ${open}">
+      <div class="res-line"><span class="rtag q">quick</span><span class="ritems">${L(p.quick)}</span></div>
+      <div class="res-line"><span class="rtag d">deep</span><span class="ritems">${L(p.deep)}</span></div>
+      ${data}
+      <div class="callout practice"><span class="ctag">practice</span><p>${p.practice}</p></div>
+      ${proj}
+    </div>`;
+}
+
+function tasksHTML(p){
+  return p.tasks.map(([text,id])=>`
+    <li class="task ${state[id]?'done':''}" data-id="${id}" role="checkbox" tabindex="0" aria-checked="${state[id]?'true':'false'}">
+      <span class="box">${CHECK}</span><span class="task-text">${text}</span>
+    </li>`).join("");
+}
+
+function render(){
+  const pipe = document.getElementById("pipeline");
+  pipe.innerHTML = "";
+  PHASES.forEach(p=>{
+    const done = p.tasks.filter(t=>state[t[1]]).length;
+    const status = statusOf(p);
+    const label = status==="success"?"success":status==="running"?"running":"pending";
+    const sec = document.createElement("section");
+    sec.className="stage"; sec.dataset.status=status;
+    sec.innerHTML = `
+      <div class="rail">
+        <div class="node"><span class="num">${p.id.slice(0,2)}</span><span class="check">${CHECK}</span></div>
+        <div class="edge"></div>
+      </div>
+      <div class="body">
+        <div class="stage-head">
+          <div><div class="stage-id">${p.id}</div><h2>${p.title}</h2></div>
+          <span class="pill">${label} · ${done}/${p.tasks.length}</span>
+        </div>
+        <p class="stage-note">${p.note}</p>
+        <ul class="tasks">${tasksHTML(p)}</ul>
+        ${detailHTML(p)}
+      </div>`;
+    pipe.appendChild(sec);
+  });
+
+  const p = CROSSCUT, done = p.tasks.filter(t=>state[t[1]]).length, status = statusOf(p);
+  const label = status==="success"?"success":status==="running"?"running":"pending";
+  const cc = document.getElementById("crosscut");
+  cc.dataset.status = status;
+  cc.innerHTML = `
+    <div class="stage-head">
+      <div><div class="stage-id">${p.id}</div><h2>${p.title}</h2></div>
+      <span class="pill">${label} · ${done}/${p.tasks.length}</span>
+    </div>
+    <p class="stage-note">${p.note}</p>
+    <ul class="tasks">${tasksHTML(p)}</ul>
+    ${detailHTML(p)}`;
+
+  updateMeter();
+  attach();
+}
+
+function renderSynth(){
+  const el = document.getElementById("synth");
+  el.innerHTML = `
+    <div class="stage-id">+ data strategy</div>
+    <h2>Real vs synthetic data</h2>
+    <p class="intro">Real data gives you <b>authenticity you can't fabricate</b>; synthetic data gives you <b>control you can't get from reality</b>. The senior move is using both deliberately: build and stress-test on synthetic, then validate against real to catch what you never thought to encode.</p>
+    <div class="grid2">
+      <div class="card real">
+        <h4>Real data</h4>
+        <p><span class="lbl">gives</span>correlations you never thought to encode — an adversary that surfaces the cases your mental model missed, plus portfolio credibility.</p>
+        <p><span class="lbl">best for</span>validation, realism, proving the pipeline survives the unexpected.</p>
+        <p><span class="lbl">watch out</span>you take what you get (no edge cases on demand); privacy &amp; licensing; messy in uncontrolled ways; not reproducible.</p>
+      </div>
+      <div class="card syn">
+        <h4>Synthetic data</h4>
+        <p><span class="lbl">gives</span>control on demand — late records, spikes, schema drift — at any scale, privacy-safe, with perfect ground truth and reproducible from a seed.</p>
+        <p><span class="lbl">best for</span>building &amp; stress-testing robustness: idempotency, watermarks, dedup, performance at scale.</p>
+        <p><span class="lbl">watch out</span>it only contains patterns you programmed, so it can overfit to your own imagination; realism is capped by effort.</p>
+      </div>
+    </div>
+    <h3>Building a project with real data</h3>
+    <ol class="mini">
+      <li><b>Pick a dataset</b> that fits the topic — use each phase's dataset list above.</li>
+      <li><b>Profile it first:</b> row counts, null rates, distributions, duplicates, date ranges. Look, don't assume.</li>
+      <li><b>Land it raw and immutable</b> (Parquet in object storage) before transforming.</li>
+      <li><b>Handle its real messiness</b> — the cleaning, dedup, and conformance work <em>is</em> the project.</li>
+      <li><b>Model and serve</b> into a star schema; document the quirks you found.</li>
+    </ol>
+    <h3>Building a project with synthetic data</h3>
+    <p class="intro">Same five fundamentals every time — then pick the rung that matches your goal.</p>
+    <ol class="steps">
+      <li><b>Seed everything</b> so every run is reproducible.</li>
+      <li>Generate <b>parents first, then children</b> that reference real parent IDs (referential integrity).</li>
+      <li>Use <b>skewed distributions</b>: lognormal for prices, Poisson for counts, Zipf/power-law for popularity.</li>
+      <li>Add <b>temporal realism</b> — business hours, seasonality, a growth trend, occasional bursts.</li>
+      <li><b>Inject messiness</b> — nulls, duplicates, late-arriving records — to practice quality tests, dedup, and watermarks.</li>
+    </ol>
+    <pre class="code"><span class="c"># minimal generator: referential integrity + reproducibility</span>
+<span class="k">from</span> faker <span class="k">import</span> Faker
+<span class="k">import</span> random
+fake = Faker(); Faker.seed(<span class="s">42</span>); random.seed(<span class="s">42</span>)
+
+customers = [{<span class="s">"id"</span>: i, <span class="s">"name"</span>: fake.name(), <span class="s">"email"</span>: fake.email()}
+             <span class="k">for</span> i <span class="k">in</span> range(<span class="s">1</span>, <span class="s">1001</span>)]
+
+<span class="c"># child rows point at REAL parent ids -> joinable, model-able</span>
+orders = [{<span class="s">"id"</span>: j,
+           <span class="s">"customer_id"</span>: random.choice(customers)[<span class="s">"id"</span>],
+           <span class="s">"ts"</span>: fake.date_time_this_year().isoformat()}
+          <span class="k">for</span> j <span class="k">in</span> range(<span class="s">1</span>, <span class="s">5001</span>)]</pre>
+    <div class="grid3">
+      <div class="card syn"><h4>rule-based</h4><p>Faker / Mimesis, your <code>generate_data.py</code>. Full control; realism capped by what you encode. Best for edge cases &amp; robustness.</p></div>
+      <div class="card syn"><h4>benchmark</h4><p>DuckDB TPC-H / TPC-DS via <code>dbgen</code>. A realistic warehouse schema at any scale. Best for performance &amp; scaling.</p></div>
+      <div class="card syn"><h4>learned</h4><p>SDV / Gretel / Tonic learn a real dataset's distributions and sample new rows. Realism + privacy; needs real data to start.</p></div>
+    </div>
+    <div class="tool-line"><span class="rtag">tools</span><span class="ritems"><a class="res" href="https://faker.readthedocs.io" target="_blank" rel="noopener">Faker</a> / <a class="res" href="https://mimesis.name" target="_blank" rel="noopener">Mimesis</a> (rule-based, in Python)<span class="sep">·</span><a class="res" href="https://duckdb.org/docs/extensions/tpch" target="_blank" rel="noopener">DuckDB TPC-H/DS</a> (large benchmark data in one line)<span class="sep">·</span><a class="res" href="https://www.mockaroo.com" target="_blank" rel="noopener">Mockaroo</a> (web UI, no code)<span class="sep">·</span><a class="res" href="https://sdv.dev" target="_blank" rel="noopener">SDV</a> (learns distributions from real data)</span></div>
+    <p class="foot">For genuinely large benchmark data, skip hand-rolling: <code>INSTALL tpch; CALL dbgen(sf=10);</code> in DuckDB gives you a full 10&nbsp;GB warehouse schema instantly. The companion <code>generate_data.py</code> script does all five steps and can emit clean tables, <code>--dirty</code> data with late records, a <code>--stream</code> event feed, and a <code>--cdc</code> change log. Whatever you generate, <b>validate it</b> — compare its column distributions against a small real sample; if the shapes don't match, it isn't realistic.</p>
+    <div class="ruleofthumb"><p><b>Rule of thumb:</b> reach for synthetic when you're testing your pipeline's behaviour under conditions you control; reach for real data when you're testing whether it survives conditions you didn't anticipate. The first builds the system; the second tells you it's done.</p></div>`;
+}
+
+function updateMeter(){
+  const done = Object.values(state).filter(Boolean).length;
+  const pct = TOTAL ? Math.round(done/TOTAL*100) : 0;
+  document.getElementById("pctNum").textContent = pct+"%";
+  document.getElementById("meterFill").style.width = pct+"%";
+  document.getElementById("countLabel").textContent =
+    done===0 ? "Nothing run yet — check off tasks as you go" : `${done} / ${TOTAL} tasks complete`;
+}
+
+function toggleTask(el){ const id=el.dataset.id; state[id]=!state[id]; save(); render(); }
+
+function attach(){
+  document.querySelectorAll(".task").forEach(el=>{
+    el.onclick = ()=>toggleTask(el);
+    el.onkeydown = e=>{ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); toggleTask(el);} };
+  });
+  document.querySelectorAll(".detail-toggle").forEach(btn=>{
+    btn.onclick = ()=>{ const id=btn.dataset.toggle; expanded.has(id)?expanded.delete(id):expanded.add(id); render(); };
+  });
+}
+
+async function save(){ if(!storageOK) return; try{ await window.storage.set(STORAGE_KEY, JSON.stringify(state)); flashSaved(); }catch(e){} }
+let flashTimer;
+function flashSaved(){
+  const el=document.getElementById("saveState"); el.innerHTML="<b>✓ Saved</b>";
+  clearTimeout(flashTimer); flashTimer=setTimeout(()=>{ el.innerHTML="<b>Progress saves automatically</b>"; },1400);
+}
+async function load(){
+  try{ const r=await window.storage.get(STORAGE_KEY); if(r&&r.value) state=JSON.parse(r.value); }
+  catch(e){ storageOK=false; document.getElementById("saveState").innerHTML="<b>Progress won't persist outside Claude</b>"; }
+  render(); renderSynth();
+}
+
+document.getElementById("resetBtn").onclick = async ()=>{
+  if(!confirm("Reset all progress? This clears every checkbox.")) return;
+  state={}; if(storageOK){ try{ await window.storage.delete(STORAGE_KEY); }catch(e){} } render();
+};
+document.getElementById("expandBtn").onclick = ()=>{
+  const allOpen = ALL.every(p=>expanded.has(p.id));
+  if(allOpen) expanded.clear(); else ALL.forEach(p=>expanded.add(p.id));
+  document.getElementById("expandBtn").textContent = allOpen ? "⇕ Expand all" : "⇕ Collapse all";
+  render();
+};
+
+load();
+</script>
